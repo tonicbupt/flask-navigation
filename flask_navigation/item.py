@@ -27,11 +27,18 @@ class Item(object):
     name of a Flask view function.
     """
 
-    def __init__(self, label, endpoint, args=None, url=None):
+    def __init__(self, label, endpoint, args=None, url=None, sub_nav_bar=None):
         self.label = label
         self.endpoint = endpoint
         self._args = args
         self._url = url
+
+        if sub_nav_bar:
+            if not isinstance(sub_nav_bar, list):
+                sub_nav_bar = [sub_nav_bar, ]
+            self._sub_nav_bar = sub_nav_bar
+        else:
+            self._sub_nav_bar = []
 
     @property
     def args(self):
@@ -65,10 +72,28 @@ class Item(object):
 
     @property
     def is_active(self):
+        # should check both self and sub navigators.
+        return self._is_self_active() or self._is_sub_nav_bar_item_active()
+
+    def _is_self_active(self):
+        # simply test if self is active.
+        # nothing to do with the sub navigators.
         is_internal = (self._url is None)
         has_same_endpoint = (request.endpoint == self.endpoint)
         has_same_args = (request.view_args == self.args)
         return is_internal and has_same_endpoint and has_same_args
+
+    def _is_sub_nav_bar_item_active(self):
+        # if no sub navigators are bound to self,
+        # then `is_active` should be related to self._is_self_active,
+        # so we simply return False.
+        if not self._sub_nav_bar:
+            return False
+        # if any sub navigators are bound,
+        # then self is the parent to all sub navigators.
+        # hence `is_active` should be related to all items in these sub navigators.
+        # any of which is active, the parent is then active.
+        return any([item.is_active for b in self._sub_nav_bar for item in b])
 
     @property
     def ident(self):
