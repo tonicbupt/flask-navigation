@@ -23,8 +23,9 @@ class Navigation(object):
 
     ItemReference = ItemReference
 
-    def __init__(self, app=None):
+    def __init__(self, name='nav', app=None):
         self.bars = {}
+        self.name = name
         if app is not None:
             self.init_app(app)
         # connects ext-level signals
@@ -45,7 +46,7 @@ class Navigation(object):
         # connects app-level signals
         appcontext_pushed.connect(self.initialize_bars, app)
         # integrate with jinja template
-        app.add_template_global(self, 'nav')
+        app.add_template_global(self, self.name)
 
     def initialize_bars(self, sender=None, **kwargs):
         """Calls the initializers of all bound navigation bars."""
